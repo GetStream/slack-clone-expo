@@ -124,15 +124,15 @@ const styles = StyleSheet.create({
   unreadChannelTitle: {
     ...textStyles,
     marginLeft: 3,
-    fontWeight: 'bold',
+    fontWeight: '900',
     fontFamily: 'Lato-Bold',
     padding: 5,
   },
   channelTitle: {
-    padding: 5,
-    fontWeight: '300',
-    paddingLeft: 10,
     ...textStyles,
+    padding: 5,
+    fontFamily: 'Lato-Light',
+    paddingLeft: 10,
   },
   channelTitlePrefix: {
     fontWeight: '300',
