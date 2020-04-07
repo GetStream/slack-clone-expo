@@ -18,7 +18,7 @@ export const UrlPreview = props => {
   return (
     <TouchableOpacity style={styles.container}>
       <View style={styles.detailsContainer}>
-        <Text style={styles.titleUrl}>{getDomain(props.title_link)}</Text>
+        <Text style={styles.titleUrl}>{getDomain(props.title_link || props.og_scrape_url)}</Text>
         <Text style={styles.title}>{props.title}</Text>
         <Text style={styles.description}>{props.text}</Text>
       </View>
@@ -54,12 +54,11 @@ const styles = StyleSheet.create({
     width: 40,
   },
   titleUrl: {
-    fontFamily: 'Lato-Regular',
-    fontWeight: 'bold',
+    fontFamily: 'Lato-Bold',
     padding: 2,
   },
   title: {
-    fontFamily: 'Lato-Regular',
+    fontFamily: 'Lato-Bold',
     fontWeight: 'bold',
     color: '#1E75BE',
     padding: 2,
