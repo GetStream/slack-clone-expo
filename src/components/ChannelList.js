@@ -97,13 +97,13 @@ const useWatchedChannels = (client, changeChannel) => {
   const [hasMoreChannels, setHasMoreChannels] = useState(true);
   const filters = {
     type: 'messaging',
-    example: 'slack-8',
+    example: 'slack-demo',
     members: {
       $in: [client.user.id],
     },
   };
 
-  const sort = {has_unread: -1};
+  const sort = {has_unread: -1, cid: -1};
   const options = {limit: 30, state: true};
 
   useEffect(() => {
