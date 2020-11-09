@@ -1,94 +1,62 @@
-import React, {useState, useEffect} from 'react';
-import {View, SafeAreaView, StyleSheet} from 'react-native';
-import {createDrawerNavigator} from '@react-navigation/drawer';
-import {NavigationContainer} from '@react-navigation/native';
-import {MessageSlack, DateSeparator, InputBox} from './src/components';
-import {
-  Chat,
-  MessageList,
-  MessageInput,
-  Channel,
-} from 'stream-chat-expo';
-import {ChannelList} from './src/components/ChannelList';
-import {ChannelHeader} from './src/components/ChannelHeader';
+import 'react-native-get-random-values';
+import 'react-native-gesture-handler';
 
-import {StreamChat} from 'stream-chat';
+import React, {useEffect, useState} from 'react';
+import {
+  ActivityIndicator,
+  View,
+  StyleSheet,
+  SafeAreaView,
+  LogBox,
+} from 'react-native';
+import {AppearanceProvider, useColorScheme} from 'react-native-appearance';
+import { enableScreens } from 'react-native-screens';
+
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import { useFonts } from '@use-expo/font';
 
-// Read more about style customizations at - https://getstream.io/chat/react-native-chat/tutorial/#custom-styles
-import streamChatTheme from './src/stream-chat-theme';
+import {StreamChat} from 'stream-chat';
 
-const chatClient = new StreamChat('q95x9hkbyd6p');
-const userToken =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidmlzaGFsIn0.LpDqH6U8V8Qg9sqGjz0bMQvOfWrWKAjPKqeODYM0Elk';
-const user = {
-  id: 'vishal',
-  name: 'Vishal',
-};
+import {
+  ChatUserContext,
+  ChatClientService,
+  USER_TOKENS,
+  USERS,
+} from './src/utils';
 
-chatClient.setUser(user, userToken);
+import {ChannelScreen} from './src/screens/ChannelScreen';
+import {NewMessageScreen} from './src/screens/NewMessageScreen';
+import {ChannelSearchScreen} from './src/screens/ChannelSearchScreen';
+import {ChannelListScreen} from './src/screens/ChannelListScreen';
+import {DraftsScreen} from './src/screens/DraftsScreen';
+import {MentionsScreen} from './src/screens/MentionsSearch';
+import {DirectMessagesScreen} from './src/screens/DirectMessagesScreen';
+import {TargettedMessageChannelScreen} from './src/screens/TargettedMessageChannelScreen';
+import {MessageSearchScreen} from './src/screens/MessageSearchScreen';
+import {ProfileScreen} from './src/screens/ProfileScreen';
 
-const ChannelListDrawer = props => {
-  return (
-    <ChannelList
-      client={chatClient}
-      changeChannel={channelId => {
-        props.navigation.jumpTo('ChannelScreen', {
-          channelId,
-        });
-      }}
-    />
-  );
-};
+import {ThreadScreen} from './src/screens/ThreadScreen';
 
-function ChannelScreen({navigation, route}) {
-  const [channel, setChannel] = useState(null);
-  useEffect(() => {
-    if (!channel) {
-      navigation.openDrawer();
-    }
-    const channelId = route.params ? route.params.channelId : null;
-    const _channel = chatClient.channel('messaging', channelId);
-    setChannel(_channel);
-  }, [route.params]);
+import {BottomTabs} from './src/components/BottomTabs';
+import {DarkTheme, LightTheme} from './src/appTheme';
 
-  return (
-    <SafeAreaView style={styles.channelScreenSaveAreaView}>
-      <View style={styles.channelScreenContainer}>
-        <ChannelHeader
-          navigation={navigation}
-          channel={channel}
-          client={chatClient}
-        />
-        <View style={styles.chatContainer}>
-          <Chat client={chatClient} style={streamChatTheme}>
-            <Channel channel={channel}>
-              <MessageList
-                Message={MessageSlack}
-                DateSeparator={DateSeparator}
-              />
-              <MessageInput
-                Input={InputBox}
-                additionalTextInputProps={{
-                  placeholderTextColor: '#979A9A',
-                  placeholder:
-                    channel && channel.data.name
-                      ? 'Message #' +
-                        channel.data.name.toLowerCase().replace(' ', '_')
-                      : 'Message',
-                }}
-              />
-            </Channel>
-          </Chat>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-}
+LogBox.ignoreAllLogs(true);
+enableScreens();
 
-const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
-export default function App() {
+const HomeStack = createStackNavigator();
+const ModalStack = createStackNavigator();
+
+export default props => {
+  const scheme = useColorScheme();
+  const [connecting, setConnecting] = useState(true);
+  const [user, setUser] = useState(USERS.vishal);
   const [isLoaded] = useFonts({
     'Lato-Black': require('./assets/fonts/Lato-Black.ttf'),
     'Lato-BlackItalic': require('./assets/fonts/Lato-BlackItalic.ttf'),
@@ -102,26 +70,148 @@ export default function App() {
     'Lato-ThinItalic': require('./assets/fonts/Lato-ThinItalic.ttf'),
   });
 
-  console.log('isLoaded ', isLoaded);
-  if (!isLoaded) return null;
+  useEffect(() => {
+    let client;
+
+    // Initializes Stream's chat client.
+    // Documentation: https://getstream.io/chat/docs/init_and_users/?language=js
+    const initChat = async () => {
+      client = new StreamChat('q95x9hkbyd6p', {
+        timeout: 10000,
+      });
+
+      const r = await client.setUser(user, USER_TOKENS[user.id]);
+      console.log(r)
+
+      // We are going to store chatClient in following ChatClientService, so that it can be
+      // accessed in other places. Ideally one would store client in a context provider, so that
+      // component can re-render if client is updated. But in our case, client only gets updated
+      // when chat user is switched - and which case we re-render the entire chat application.
+      // So we don't need to worry about re-rendering every component on updating client.
+      ChatClientService.setClient(client);
+      setConnecting(false);
+    };
+
+    setConnecting(true);
+    initChat();
+
+    return () => {
+      client && client.disconnect();
+    };
+  }, [user]);
+
+  if (connecting || !isLoaded) {
+    return (
+      <SafeAreaView>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="black" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <NavigationContainer>
-      <View style={{flex: 1, backgroundColor: 'black'}}>
-        <Drawer.Navigator
-          drawerContent={ChannelListDrawer}
-          drawerStyle={styles.drawerNavigator}>
-          <Drawer.Screen name="ChannelScreen" component={ChannelScreen} />
-        </Drawer.Navigator>
-      </View>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <AppearanceProvider>
+        <NavigationContainer theme={scheme === 'dark' ? DarkTheme : LightTheme}>
+          <View style={styles.container}>
+            <ChatUserContext.Provider
+              value={{
+                switchUser: userId => setUser(USERS[userId]),
+              }}>
+              <HomeStackNavigator />
+            </ChatUserContext.Provider>
+          </View>
+        </NavigationContainer>
+      </AppearanceProvider>
+    </SafeAreaProvider>
   );
-}
+};
+
+const ModalStackNavigator = props => {
+  return (
+    <ModalStack.Navigator initialRouteName="Home" mode="modal">
+      <ModalStack.Screen
+        name="Tabs"
+        component={TabNavigation}
+        options={{headerShown: false}}
+      />
+      <ModalStack.Screen
+        name="NewMessageScreen"
+        component={NewMessageScreen}
+        options={{headerShown: false}}
+      />
+      <ModalStack.Screen
+        name="ChannelSearchScreen"
+        component={ChannelSearchScreen}
+        options={{headerShown: false}}
+      />
+      <ModalStack.Screen
+        name="MessageSearchScreen"
+        component={MessageSearchScreen}
+        options={{headerShown: false}}
+      />
+      <ModalStack.Screen
+        name="TargettedMessageChannelScreen"
+        component={TargettedMessageChannelScreen}
+        options={{headerShown: false}}
+      />
+    </ModalStack.Navigator>
+  );
+};
+
+const HomeStackNavigator = props => {
+  return (
+    <HomeStack.Navigator initialRouteName="ModalStack">
+      <HomeStack.Screen
+        name="ModalStack"
+        component={ModalStackNavigator}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="ChannelScreen"
+        component={ChannelScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="DraftsScreen"
+        component={DraftsScreen}
+        options={{headerShown: false}}
+      />
+      <HomeStack.Screen
+        name="ThreadScreen"
+        component={ThreadScreen}
+        options={{headerShown: false}}
+      />
+    </HomeStack.Navigator>
+  );
+};
+
+const TabNavigation = () => {
+  return (
+    <Tab.Navigator tabBar={props => <BottomTabs {...props} />}>
+      <Tab.Screen name="home" component={ChannelListScreen} />
+      <Tab.Screen name={'dms'} component={DirectMessagesScreen} />
+      <Tab.Screen name={'mentions'} component={MentionsScreen} />
+      <Tab.Screen name={'you'} component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   channelScreenSaveAreaView: {
     backgroundColor: 'white',
   },
   channelScreenContainer: {flexDirection: 'column', height: '100%'},
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   drawerNavigator: {
     backgroundColor: '#3F0E40',
     width: 350,
