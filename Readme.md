@@ -1,15 +1,13 @@
 # Slack clone using expo, stream and react-navigation
 
 <div style="display: inline">
-<img src="./screenshots/1.png" alt="IMAGE ALT TEXT HERE" width="250" border="1" style="margin-right: 30px" />
-<img src="./screenshots/2.png" alt="IMAGE ALT TEXT HERE" width="250" border="1" style="margin-right: 30px" />
-<img src="./screenshots/3.png" alt="IMAGE ALT TEXT HERE" width="250" border="1" />
+<img src="https://stream-blog-v2.imgix.net/blog/wp-content/uploads/80af4fbb74a77a4465679f6118af7427/image.png" alt="IMAGE ALT TEXT HERE"/>
 </div>
+
 
 ## Tutorial
 
-https://medium.com/@vishalnarkhede.iitd/slack-clone-with-react-native-part-1-f71a5e6a339f?source=friends_link&sk=b06d7cc0c49bd08bcf398df9c89d48d7
-
+https://dev.to/vishalnarkhede/how-to-build-slack-clone-with-react-native-part-2-g5?preview=267e12eea2525d598733d6f5fdb064de73f9984727528cb23bfe0429c37f0391ba9dba5ce2a0840e8779ab7b3dd63e245ce7ad23513a254192064a2c
 
 
 ## Running the project
